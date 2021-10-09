@@ -1,5 +1,5 @@
 # CelesChia Chenbro Script
-按照 https://sit.teamdynamix.com/TDClient/1865/Portal/KB/ArticleDet?ID=849 將WyWinn的SSD mount在 ~/Desktop/plot
+sshfs 帳戶@母雞IP:/dest地址/ ~/plots
 
 下載這個文件夾
 
