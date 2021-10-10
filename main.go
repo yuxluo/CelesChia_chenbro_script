@@ -98,7 +98,7 @@ func findEmpty() string {
 		intCapacity, _ := strconv.Atoi(withoutSpace[1])
 		intRemaining, _ := strconv.Atoi(withoutSpace[3])
 		if intCapacity > 999999999 && intRemaining > 100999999 {
-			fmt.Println(withoutSpace[5])
+			return withoutSpace[5]
 		}
 	}
 	return ""

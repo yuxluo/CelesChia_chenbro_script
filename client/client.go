@@ -57,8 +57,7 @@ func (c *Client) Init() (err error) {
 
 	fmt.Println("Enter Muji IP: ")
 	var masterIP string
-	//fmt.Scanln(&masterIP)
-	masterIP = "127.0.0.1"
+	fmt.Scanln(&masterIP)
 	addr := masterIP + ":" + strconv.Itoa(int(c.Port))
 
 	if c.UseHttp {
