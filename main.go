@@ -139,7 +139,7 @@ func runClient(masterIP string) {
 					println("Transfering %s to %s", plotFileName, nextEmptyDrive)
 					exec.Command("wget", masterIP+"/"+plotFileName, "-P", nextEmptyDrive).Output()
 					println("Finished transfering, requesting delete")
-					plotFileName, _ := client.Execute(ctx, "delete " + plotFileName)
+					_, _ = client.Execute(ctx, "delete "+plotFileName)
 					break
 				}
 			}

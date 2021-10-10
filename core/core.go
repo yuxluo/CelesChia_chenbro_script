@@ -58,20 +58,24 @@ func (h *Handler) Execute(req Request, res *Response) (err error) {
 		return
 	}
 	h.Mu.Lock()
-	res.Ok = false
-
-	out, _ := exec.Command("ls", "/var/www/html/").Output()
-	s := strings.Split(string(out), "\n")
-	for _, fileName := range s {
-		if fileName != "" && fileName[len(fileName)-4:] == "plot" {
-			if _, exist := h.TakenSet[fileName]; !exist {
-				res.Ok = true
-				res.Message = fileName
-				h.TakenSet[fileName] = true
-				fmt.Printf("Delivering %s\n", res.Message)
-				break
+	if req.Name == "request" {
+		res.Ok = false
+		out, _ := exec.Command("ls", "/var/www/html/").Output()
+		s := strings.Split(string(out), "\n")
+		for _, fileName := range s {
+			if fileName != "" && fileName[len(fileName)-4:] == "plot" {
+				if _, exist := h.TakenSet[fileName]; !exist {
+					res.Ok = true
+					res.Message = fileName
+					h.TakenSet[fileName] = true
+					fmt.Printf("Delivering %s\n", res.Message)
+					break
+				}
 			}
 		}
+	} else if strings.Split(req.Name, " ")[0] == "delete" {
+		exec.Command("rm", "/var/www/html/"+strings.Split(req.Name, " ")[1]).Output()
+		res.Ok = true
 	}
 
 	h.Mu.Unlock()
