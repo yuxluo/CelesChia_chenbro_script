@@ -1,23 +1,77 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
+
+	. "github.com/shdriesner/sample-rpc-go/client"
+	. "github.com/shdriesner/sample-rpc-go/server"
 )
 
-func findPlotName(dir string) string {
-	out, _ := exec.Command("ls").Output()
-	s := strings.Split(string(out), "\n")
-	for _, fileName := range s {
-		if fileName[len(fileName) - 4:] == "plot" {
-			return fileName
-		}
+var (
+	port        = flag.Uint("port", 1337, "port to listen or connect to for rpc calls")
+	isServer    = flag.Bool("server", false, "activates server mode")
+	json        = flag.Bool("json", false, "whether it should use json-rpc")
+	serverSleep = flag.Duration("server.sleep", 0, "time for the server to sleep on requests")
+	http        = flag.Bool("http", false, "whether it should use HTTP")
+)
+
+// handleSignals is a blocking function that waits for termination/interrupt
+// signals.
+//
+// Running it in the background (non-main goroutine) has the effect of keeping
+// track of the desire of termination of the current execution and then responding
+// accordingly.
+//
+// In this example we gracefully  close the server listener in the case
+// of the server - in the case of the client, breaks the request by cancelling the
+// context.
+func handleSignals() {
+	signals := make(chan os.Signal, 1)
+
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	<-signals
+	log.Println("signal received")
+}
+
+// must panics in the case of error.
+func must(err error) {
+	if err == nil {
+		return
 	}
-	return ""
+
+	log.Panicln(err)
+}
+
+// runServer sets up the server with the
+// flags as they were parsed and then initiates
+// the server listening.
+func runServer() {
+	server := &Server{
+		UseHttp: *http,
+		UseJson: *json,
+		Sleep:   *serverSleep,
+		Port:    *port,
+	}
+	defer server.Close()
+
+	go func() {
+		handleSignals()
+		server.Close()
+		os.Exit(0)
+	}()
+
+	must(server.Start())
+	return
 }
 
 func findEmpty() string {
@@ -29,10 +83,9 @@ func findEmpty() string {
 	//fmt.Printf("df output is \n%s\n", out)
 	var dfOutput = string(out)
 
-
 	s := strings.Split(dfOutput, "\n")
 	for index, partition := range s {
-		if index == 0 {
+		if index == 0 || partition == ""{
 			continue
 		}
 		items := strings.Split(partition, " ")
@@ -42,46 +95,71 @@ func findEmpty() string {
 				withoutSpace = append(withoutSpace, item)
 			}
 		}
-		intCapacity, err := strconv.Atoi(withoutSpace[1])
-		intRemaining, err := strconv.Atoi(withoutSpace[3])
-		if err != nil {
-
-		}
+		intCapacity, _ := strconv.Atoi(withoutSpace[1])
+		intRemaining, _ := strconv.Atoi(withoutSpace[3])
 		if intCapacity > 999999999 && intRemaining > 100999999 {
-			return withoutSpace[5]
+			fmt.Println(withoutSpace[5])
 		}
 	}
 	return ""
 }
 
+// runClient sets up the client with the
+// flags as they were parsed and then initiates
+// the client execution.
+func runClient() {
+	var (
+		ctx    context.Context
+		cancel context.CancelFunc
+	)
+	ctx, cancel = context.WithCancel(context.Background())
+	client := &Client{
+		UseHttp: *http,
+		UseJson: *json,
+		Port:    *port,
+	}
+	defer cancel()
+	defer client.Close()
 
-
-func main() {
-	var muji_ssd_path = "~/plots/"
-	var nextEmptyDirve string
-	fmt.Println("請確保母雞SSD已經mount好，不然要吃屎")
+	must(client.Init())
 
 	for true {
 		//	找到空盤
-		nextEmptyDirve = findEmpty()
-		if nextEmptyDirve == "" {
+		nextEmptyDrive := findEmpty()
+		if nextEmptyDrive == "" {
 			fmt.Println("Either 吃屎了 or 全部盤都已經裝滿")
-			break
+			return
 		} else {
 			for true {
-				plotName := findPlotName(muji_ssd_path)
-				if plotName == "" {
+				plotFileName, _ := client.Execute(ctx, "request")
+				if plotFileName == "" {
 					fmt.Println("母雞沒有plot, 等待1分鐘....")
 					time.Sleep(1 * time.Minute)
 				} else {
-					_, _ = exec.Command("mv", muji_ssd_path+plotName, nextEmptyDirve).Output()
-					println("Transferred %s to %s", plotName, nextEmptyDirve)
-					_, _ = exec.Command("rm", muji_ssd_path+plotName).Output()
+					println("Transferred %s to %s", plotFileName, nextEmptyDrive)
 					break
 				}
 			}
 		}
-		break
 	}
+}
+
+// main execution - validates flags and constructs the internal
+// runtime configuration based on the flags supplied.
+func main() {
+	flag.Parse()
+
+	if *isServer {
+		log.Println("starting server")
+		log.Printf("will listen on port %d\n", *port)
+
+		runServer()
+		return
+	}
+
+	log.Println("starting client")
+	log.Printf("will connect to port %d\n", *port)
+
+	runClient()
 	return
 }
