@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	. "github.com/shdriesner/sample-rpc-go/client"
-	. "github.com/shdriesner/sample-rpc-go/server"
+	. "github.com/yuxluo/CelesChia_chenbro_script/client"
+	. "github.com/yuxluo/CelesChia_chenbro_script/server"
 )
 
 var (
@@ -85,7 +85,7 @@ func findEmpty() string {
 
 	s := strings.Split(dfOutput, "\n")
 	for index, partition := range s {
-		if index == 0 || partition == ""{
+		if index == 0 || partition == "" {
 			continue
 		}
 		items := strings.Split(partition, " ")

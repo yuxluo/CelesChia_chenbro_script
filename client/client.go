@@ -14,7 +14,7 @@ import (
 	"net/rpc/jsonrpc"
 	"strconv"
 
-	"github.com/shdriesner/sample-rpc-go/core"
+	"github.com/yuxluo/CelesChia_chenbro_script/core"
 )
 
 // Client contains the configuration options for
