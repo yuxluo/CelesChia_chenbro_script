@@ -136,8 +136,10 @@ func runClient(masterIP string) {
 					fmt.Println("母雞沒有plot, 等待1分鐘....")
 					time.Sleep(1 * time.Minute)
 				} else {
-					println("Transferred %s to %s", plotFileName, nextEmptyDrive)
+					println("Transfering %s to %s", plotFileName, nextEmptyDrive)
 					exec.Command("wget", masterIP+"/"+plotFileName, "-P", nextEmptyDrive).Output()
+					println("Finished transfering, requesting delete")
+					plotFileName, _ := client.Execute(ctx, "delete " + plotFileName)
 					break
 				}
 			}
