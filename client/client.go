@@ -9,7 +9,6 @@ package client
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"strconv"
@@ -49,15 +48,12 @@ type Client struct {
 // Note.: we're not setting TLS here either but it's a very
 // simple thing given that we can have total control over
 // the underlying connection.
-func (c *Client) Init() (err error) {
+func (c *Client) Init(masterIP string) (err error) {
 	if c.Port == 0 {
 		err = errors.New("client: port must be specified")
 		return
 	}
 
-	fmt.Println("Enter Muji IP: ")
-	var masterIP string
-	fmt.Scanln(&masterIP)
 	addr := masterIP + ":" + strconv.Itoa(int(c.Port))
 
 	if c.UseHttp {
