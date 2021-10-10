@@ -107,7 +107,7 @@ func findEmpty() string {
 // runClient sets up the client with the
 // flags as they were parsed and then initiates
 // the client execution.
-func runClient() {
+func runClient(masterIP string) {
 	var (
 		ctx    context.Context
 		cancel context.CancelFunc
@@ -121,7 +121,7 @@ func runClient() {
 	defer cancel()
 	defer client.Close()
 
-	must(client.Init())
+	must(client.Init(masterIP))
 
 	for true {
 		//	找到空盤
@@ -137,6 +137,7 @@ func runClient() {
 					time.Sleep(1 * time.Minute)
 				} else {
 					println("Transferred %s to %s", plotFileName, nextEmptyDrive)
+					exec.Command("wget", masterIP+"/"+plotFileName, "-P", nextEmptyDrive).Output()
 					break
 				}
 			}
@@ -159,7 +160,9 @@ func main() {
 
 	log.Println("starting client")
 	log.Printf("will connect to port %d\n", *port)
-
-	runClient()
+	fmt.Println("Enter Muji IP: ")
+	var masterIP string
+	fmt.Scanln(&masterIP)
+	runClient(masterIP)
 	return
 }
