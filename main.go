@@ -127,18 +127,18 @@ func runClient(masterIP string) {
 		//	找到空盤
 		nextEmptyDrive := findEmpty()
 		if nextEmptyDrive == "" {
-			fmt.Println("Either 吃屎了 or 全部盤都已經裝滿")
+			log.Println("Either 吃屎了 or 全部盤都已經裝滿")
 			return
 		} else {
 			for true {
 				plotFileName, _ := client.Execute(ctx, "request")
 				if plotFileName == "" {
-					fmt.Println("母雞沒有plot, 等待1分鐘....")
+					log.Println("母雞沒有plot, 等待1分鐘....")
 					time.Sleep(1 * time.Minute)
 				} else {
-					println("Transfering %s to %s", plotFileName, nextEmptyDrive)
+					log.Printf("Transfering %s to %s", plotFileName, nextEmptyDrive)
 					exec.Command("wget", masterIP+"/"+plotFileName, "-P", nextEmptyDrive).Output()
-					println("Finished transfering, requesting delete")
+					log.Printf("Finished transfering, requesting delete")
 					_, _ = client.Execute(ctx, "delete "+plotFileName)
 					break
 				}

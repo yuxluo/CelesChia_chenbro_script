@@ -8,7 +8,7 @@ package core
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"os/exec"
 	"strings"
 	"sync"
@@ -68,7 +68,7 @@ func (h *Handler) Execute(req Request, res *Response) (err error) {
 					res.Ok = true
 					res.Message = fileName
 					h.TakenSet[fileName] = true
-					fmt.Printf("Delivering %s\n", res.Message)
+					log.Printf("Serving %s\n", res.Message)
 					break
 				}
 			}
